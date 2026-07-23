@@ -1,0 +1,183 @@
+<div class="page-header">
+  <div>
+    <h1>Job Postings</h1>
+    <p class="subtitle">
+      @if (canManage) {
+        Every posting, including drafts and closed ones. Employees only see OPEN postings marked Internal or Both.
+      } @else {
+        Open internal positions you can apply for.
+      }
+    </p>
+  </div>
+  @if (canManage) {
+    <button mat-flat-button color="primary" (click)="toggleForm()">
+      <mat-icon>{{ formOpen() ? 'close' : 'add' }}</mat-icon>
+      {{ formOpen() ? 'Cancel' : 'New posting' }}
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <mat-card class="error-card">
+    <mat-icon>error_outline</mat-icon>
+    <div>
+      <strong>Could not load job postings</strong>
+      <p>{{ errorMessage() }}</p>
+      <button mat-button (click)="load()">Try again</button>
+    </div>
+  </mat-card>
+}
+
+@if (formOpen()) {
+  <mat-card class="form-card">
+    <h3>{{ isEditing ? 'Edit posting' : 'New posting' }}</h3>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="4" placeholder="Responsibilities, requirements, what makes this role a good fit"></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Department</mat-label>
+          <mat-select formControlName="departmentId">
+            <mat-option [value]="null">—</mat-option>
+            @for (d of departments(); track d.id) {
+              <mat-option [value]="d.id">{{ d.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Linked position (optional)</mat-label>
+          <mat-select formControlName="positionId">
+            <mat-option [value]="null">—</mat-option>
+            @for (p of positions(); track p.id) {
+              <mat-option [value]="p.id">{{ p.title }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Location</mat-label>
+          <input matInput formControlName="location" placeholder="e.g. Frankfurt, DE / Remote" />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Visibility</mat-label>
+          <mat-select formControlName="visibility">
+            @for (v of visibilities; track v) {
+              <mat-option [value]="v">{{ v }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (isEditing) {
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              @for (s of statuses; track s) {
+                <mat-option [value]="s">{{ s }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        } @else {
+          <mat-form-field appearance="outline">
+            <mat-label>Posted date</mat-label>
+            <input matInput type="date" formControlName="postedDate" />
+          </mat-form-field>
+        }
+
+        <mat-form-field appearance="outline">
+          <mat-label>Closing date (optional)</mat-label>
+          <input matInput type="date" formControlName="closingDate" />
+        </mat-form-field>
+      </div>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || saving()">
+        @if (saving()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          {{ isEditing ? 'Save changes' : 'Create posting' }}
+        }
+      </button>
+    </form>
+  </mat-card>
+}
+
+@if (loading()) {
+  <div class="loading-state">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+} @else if (postings().length === 0 && !errorMessage()) {
+  <mat-card class="empty-card">
+    <mat-icon class="empty-icon">work_outline</mat-icon>
+    <p class="empty-state">
+      @if (canManage) {
+        No job postings yet — create the first one above.
+      } @else {
+        No open internal positions right now — check back soon.
+      }
+    </p>
+  </mat-card>
+} @else if (postings().length > 0) {
+  <div class="postings-grid">
+    @for (p of postings(); track p.id) {
+      <mat-card class="posting-card">
+        <div class="posting-header">
+          <h3>{{ p.title }}</h3>
+          <div class="chips">
+            <mat-chip [class]="'status-' + p.status.toLowerCase()">{{ p.status }}</mat-chip>
+            <mat-chip>{{ p.visibility }}</mat-chip>
+          </div>
+        </div>
+        <p class="posting-meta">
+          {{ p.departmentName || 'No department' }}
+          @if (p.location) { · {{ p.location }} }
+          @if (p.positionTitle) { · linked to {{ p.positionTitle }} }
+        </p>
+        <p class="posting-dates">
+          Posted {{ p.postedDate }}
+          @if (p.closingDate) { · Closes {{ p.closingDate }} }
+        </p>
+
+        @if (p.description) {
+          <button mat-button class="expand-toggle" (click)="toggleExpand(p)">
+            {{ expandedId() === p.id ? 'Hide description' : 'View description' }}
+          </button>
+          @if (expandedId() === p.id) {
+            <p class="posting-description">{{ p.description }}</p>
+          }
+        }
+
+        @if (canManage) {
+          <div class="posting-actions">
+            <button mat-button (click)="startEdit(p)">
+              <mat-icon>edit</mat-icon>
+              Edit
+            </button>
+            <button mat-button color="warn" (click)="deletePosting(p)" [disabled]="deletingId() === p.id">
+              @if (deletingId() === p.id) {
+                <mat-spinner diameter="16"></mat-spinner>
+              } @else {
+                <mat-icon>delete</mat-icon>
+              }
+              Delete
+            </button>
+          </div>
+        }
+      </mat-card>
+    }
+  </div>
+}

@@ -1,0 +1,54 @@
+<div class="page-header">
+  <h1>Org Chart</h1>
+  <p class="subtitle">
+    Reporting hierarchy built from each employee's manager — showing
+    what's visible to your role ({{ totalCount() }} {{ totalCount() === 1 ? 'person' : 'people' }}).
+  </p>
+</div>
+
+@if (loading()) {
+  <div class="loading-state">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+} @else if (roots().length === 0) {
+  <mat-card>
+    <p class="empty-state">No employees visible to build a chart from.</p>
+  </mat-card>
+} @else {
+  <mat-card class="chart-card">
+    <ng-container *ngFor="let node of roots()">
+      <ng-container *ngTemplateOutlet="nodeTemplate; context: { node: node, depth: 0 }"></ng-container>
+    </ng-container>
+  </mat-card>
+}
+
+<ng-template #nodeTemplate let-node="node" let-depth="depth">
+  <div class="org-node" [style.padding-left.px]="depth * 28">
+    <div class="node-row">
+      @if (node.children.length > 0) {
+        <button mat-icon-button class="collapse-btn" (click)="toggleCollapse(node.employee.id)" [attr.aria-label]="isCollapsed(node.employee.id) ? 'Expand' : 'Collapse'">
+          <mat-icon>{{ isCollapsed(node.employee.id) ? 'chevron_right' : 'expand_more' }}</mat-icon>
+        </button>
+      } @else {
+        <span class="collapse-spacer"></span>
+      }
+
+      <a class="node-link" [routerLink]="['/employees', node.employee.id]">
+        <span class="node-name">{{ node.employee.firstName }} {{ node.employee.lastName }}</span>
+      </a>
+      <span class="node-title">{{ node.employee.positionTitle || 'No position on file' }}</span>
+      @if (node.employee.departmentName) {
+        <mat-chip class="node-department">{{ node.employee.departmentName }}</mat-chip>
+      }
+      @if (node.children.length > 0) {
+        <span class="node-report-count">{{ node.children.length }} direct report{{ node.children.length === 1 ? '' : 's' }}</span>
+      }
+    </div>
+
+    @if (!isCollapsed(node.employee.id)) {
+      @for (child of node.children; track child.employee.id) {
+        <ng-container *ngTemplateOutlet="nodeTemplate; context: { node: child, depth: depth + 1 }"></ng-container>
+      }
+    }
+  </div>
+</ng-template>

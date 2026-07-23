@@ -1,0 +1,179 @@
+<h1>Leave Balances</h1>
+<p class="subtitle">
+  Set annual allocations for ANNUAL, SICK, and PARENTAL leave — the only
+  types that are balance-tracked. UNPAID and OTHER have no cap and never
+  appear here.
+</p>
+
+<mat-card class="allocate-card">
+  <h3>Set allocation</h3>
+  <form [formGroup]="form" (ngSubmit)="setAllocation()" class="inline-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Employee</mat-label>
+      <mat-select formControlName="employeeId">
+        @for (e of employees(); track e.id) {
+          <mat-option [value]="e.id">{{ e.firstName }} {{ e.lastName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Leave type</mat-label>
+      <mat-select formControlName="leaveType">
+        @for (t of trackedTypes; track t) {
+          <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Year</mat-label>
+      <input matInput type="number" formControlName="year" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Allocated days</mat-label>
+      <input matInput type="number" formControlName="allocatedDays" />
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || saving()">
+      @if (saving()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        Set allocation
+      }
+    </button>
+  </form>
+</mat-card>
+
+<mat-accordion class="bulk-actions">
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>Bulk allocate</mat-panel-title>
+      <mat-panel-description>Set the same allocation for every active employee at once</mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <form [formGroup]="bulkForm" (ngSubmit)="bulkAllocate()" class="inline-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Leave type</mat-label>
+        <mat-select formControlName="leaveType">
+          @for (t of trackedTypes; track t) {
+            <mat-option [value]="t">{{ t }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Year</mat-label>
+        <input matInput type="number" formControlName="year" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Allocated days</mat-label>
+        <input matInput type="number" formControlName="allocatedDays" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Department (optional — all if blank)</mat-label>
+        <mat-select formControlName="departmentId">
+          <mat-option [value]="null">All departments</mat-option>
+          @for (d of departments(); track d.id) {
+            <mat-option [value]="d.id">{{ d.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="bulkForm.invalid || bulkSaving()">
+        @if (bulkSaving()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          Apply to all
+        }
+      </button>
+    </form>
+  </mat-expansion-panel>
+
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>Carry over between years</mat-panel-title>
+      <mat-panel-description>Roll unused days from one year into the next</mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <form [formGroup]="carryOverForm" (ngSubmit)="carryOver()" class="inline-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Leave type</mat-label>
+        <mat-select formControlName="leaveType">
+          @for (t of trackedTypes; track t) {
+            <mat-option [value]="t">{{ t }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>From year</mat-label>
+        <input matInput type="number" formControlName="fromYear" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To year</mat-label>
+        <input matInput type="number" formControlName="toYear" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Max carry-over days (optional)</mat-label>
+        <input matInput type="number" formControlName="maxCarryOverDays" placeholder="Uncapped if blank" />
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="carryOverForm.invalid || carryOverSaving()">
+        @if (carryOverSaving()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          Carry over
+        }
+      </button>
+    </form>
+  </mat-expansion-panel>
+</mat-accordion>
+
+<mat-card>
+  <table mat-table [dataSource]="balances()" class="full-width">
+    <ng-container matColumnDef="employeeName">
+      <th mat-header-cell *matHeaderCellDef>Employee</th>
+      <td mat-cell *matCellDef="let b">{{ b.employeeName }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="leaveType">
+      <th mat-header-cell *matHeaderCellDef>Type</th>
+      <td mat-cell *matCellDef="let b">{{ b.leaveType }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="allocatedDays">
+      <th mat-header-cell *matHeaderCellDef>Allocated</th>
+      <td mat-cell *matCellDef="let b">{{ b.allocatedDays }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="usedDays">
+      <th mat-header-cell *matHeaderCellDef>Used</th>
+      <td mat-cell *matCellDef="let b">{{ b.usedDays }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="pendingDays">
+      <th mat-header-cell *matHeaderCellDef>Pending</th>
+      <td mat-cell *matCellDef="let b">{{ b.pendingDays }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="availableDays">
+      <th mat-header-cell *matHeaderCellDef>Available</th>
+      <td mat-cell *matCellDef="let b">
+        <strong [class.over-budget]="b.availableDays < 0">{{ b.availableDays }}</strong>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+
+  @if (balances().length === 0) {
+    <p class="empty-state">No allocations set for {{ currentYear }} yet — use the form above.</p>
+  }
+</mat-card>

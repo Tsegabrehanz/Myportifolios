@@ -1,0 +1,99 @@
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.form-card {
+  max-width: 640px;
+  padding: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1 1 240px;
+  }
+}
+
+.error {
+  color: #c62828;
+  font-size: 0.875rem;
+  margin: 4px 0 12px;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.hint {
+  color: #666;
+  font-size: 0.8125rem;
+  margin: -8px 0 12px;
+}
+
+.credentials-card {
+  max-width: 480px;
+  padding: 20px;
+}
+
+.credentials-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+}
+
+.credentials-icon {
+  color: #2e7d32;
+}
+
+.credentials-warning {
+  color: #666;
+  font-size: 0.8125rem;
+  margin: 0 0 16px;
+}
+
+.credential-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.credential-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.credential-value {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-top: 2px;
+
+  &.monospace {
+    font-family: monospace;
+  }
+}
+
+.done-btn {
+  width: 100%;
+  margin-top: 16px;
+}

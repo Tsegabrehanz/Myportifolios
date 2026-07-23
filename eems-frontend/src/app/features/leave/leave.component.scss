@@ -1,0 +1,78 @@
+.balances-card {
+  margin-bottom: 16px;
+  padding: 16px;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+}
+
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.balance-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.balance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+}
+
+.balance-type {
+  font-weight: 600;
+}
+
+.balance-available {
+  color: #666;
+  font-size: 0.8125rem;
+}
+
+.balance-pending {
+  font-size: 0.75rem;
+  color: #ef6c00;
+}
+
+.create-card {
+  margin-bottom: 16px;
+  padding: 8px;
+
+  h3 {
+    margin-top: 0;
+  }
+}
+
+.error {
+  color: #c62828;
+  font-size: 0.875rem;
+  margin: 8px 0 0;
+}
+
+.inline-form {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.reason-field {
+  flex: 1 1 220px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+}

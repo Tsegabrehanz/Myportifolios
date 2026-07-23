@@ -1,0 +1,32 @@
+.subtitle {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.filter-card {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+}

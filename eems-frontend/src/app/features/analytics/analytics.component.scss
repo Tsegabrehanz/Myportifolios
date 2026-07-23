@@ -1,0 +1,168 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.department-filter {
+  width: 220px;
+
+  // Tighten the field's own vertical space so it lines up with the
+  // export buttons instead of pushing them down.
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}
+
+.export-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.export-actions button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.chart-card {
+  padding: 16px;
+
+  h3 {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    color: #333;
+  }
+}
+
+.table-card {
+  margin-top: 20px;
+  padding: 16px;
+
+  h3 {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    color: #333;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+}
+
+.powerbi-card {
+  margin-top: 20px;
+  padding: 16px;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 1rem;
+    color: #333;
+  }
+}
+
+.powerbi-icon {
+  color: #f2c811; // Power BI's accent yellow, for quick visual recognition only
+}
+
+.hint {
+  color: #666;
+  font-size: 0.8125rem;
+  margin: 0 0 12px;
+
+  code {
+    background: #f5f5f5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+  }
+}
+
+.production-note {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.token-row {
+  margin-bottom: 12px;
+}
+
+.token-row button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.endpoint-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.endpoint-name {
+  font-weight: 600;
+  padding: 6px 12px 6px 0;
+  white-space: nowrap;
+}
+
+.endpoint-url {
+  font-family: monospace;
+  font-size: 0.8125rem;
+  color: #444;
+  padding: 6px 0;
+  word-break: break-all;
+}

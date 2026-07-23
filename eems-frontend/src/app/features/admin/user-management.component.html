@@ -1,0 +1,174 @@
+<h1>User Management</h1>
+<p class="subtitle">Grant or revoke roles, enable/disable accounts, and reset passwords. SUPER_ADMIN only.</p>
+
+<mat-card class="branding-card">
+  <h3>Company Branding</h3>
+  <div class="branding-row">
+    <img [src]="brandingService.logoUrl()" alt="Current logo" class="logo-preview" width="48" height="48" />
+    <div class="branding-actions">
+      <input #logoInput type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
+      <button mat-stroked-button (click)="triggerLogoPicker()" [disabled]="uploadingLogo()">
+        @if (uploadingLogo()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon>upload_file</mat-icon>
+        }
+        {{ hasCustomLogo() ? 'Change logo' : 'Upload logo' }}
+      </button>
+      @if (hasCustomLogo()) {
+        <button mat-button (click)="removeLogo()">Revert to default</button>
+      }
+    </div>
+  </div>
+  <p class="branding-hint">
+    Shown in the sidebar, footer, and login page for everyone — including
+    before anyone logs in, so this upload is genuinely public to read,
+    even though only SUPER_ADMIN can change it.
+  </p>
+  @if (logoErrorMessage()) {
+    <p class="branding-error">{{ logoErrorMessage() }}</p>
+  }
+</mat-card>
+
+<mat-card class="employee-id-card">
+  <h3>Employee ID Format</h3>
+  <form [formGroup]="employeeIdFormatForm" (ngSubmit)="saveEmployeeIdFormat()" class="employee-id-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Prefix</mat-label>
+      <input matInput formControlName="prefix" placeholder="e.g. EMP-" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Suffix (optional)</mat-label>
+      <input matInput formControlName="suffix" placeholder="e.g. -2026" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="submit" [disabled]="employeeIdFormatForm.invalid || savingEmployeeIdFormat()">
+      @if (savingEmployeeIdFormat()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        Save
+      }
+    </button>
+  </form>
+  @if (employeeIdExample()) {
+    <p class="employee-id-hint">
+      Next generated ID will look like: <strong>{{ employeeIdExample() }}</strong>
+    </p>
+  }
+  <p class="employee-id-hint">
+    Only affects employees created <em>after</em> saving — existing
+    employee IDs are never renamed or regenerated when this changes.
+  </p>
+  @if (employeeIdFormatErrorMessage()) {
+    <p class="branding-error">{{ employeeIdFormatErrorMessage() }}</p>
+  }
+</mat-card>
+
+@if (errorMessage()) {
+  <mat-card class="error-card">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage() }}</span>
+  </mat-card>
+}
+
+@if (resetPasswordFor(); as user) {
+  <mat-card class="reset-card">
+    <div class="reset-header">
+      <mat-icon class="reset-icon">key</mat-icon>
+      <h2>Temporary password for {{ user.email }}</h2>
+    </div>
+    <p class="reset-warning">
+      Copy this now — it can't be shown again after you leave this page.
+      Share it with {{ user.email }} out-of-band; they'll be required to
+      set their own password on next login.
+    </p>
+    <div class="reset-password-row">
+      <span class="reset-password-value">{{ resetTemporaryPassword() }}</span>
+      <button mat-icon-button (click)="copyTemporaryPassword()" aria-label="Copy password">
+        <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
+      </button>
+    </div>
+    <button mat-flat-button color="primary" (click)="dismissResetPanel()" class="reset-done-btn">
+      Done — I've copied it
+    </button>
+  </mat-card>
+}
+
+<mat-card>
+  <table mat-table [dataSource]="users()" class="full-width">
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef>Email</th>
+      <td mat-cell *matCellDef="let u">
+        {{ u.email }}
+        @if (isSelf(u)) {
+          <mat-chip class="you-chip">you</mat-chip>
+        }
+        @if (u.mustChangePassword) {
+          <mat-icon class="pending-change-icon" matTooltip="Has a temporary password — must change it on next login">schedule</mat-icon>
+        }
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="employee">
+      <th mat-header-cell *matHeaderCellDef>Linked Employee</th>
+      <td mat-cell *matCellDef="let u">{{ u.employeeName || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="role">
+      <th mat-header-cell *matHeaderCellDef>Role</th>
+      <td mat-cell *matCellDef="let u">
+        <mat-select
+          [value]="u.role"
+          (selectionChange)="changeRole(u, $event.value)"
+          [disabled]="isSelf(u) || savingId() === u.id"
+          class="role-select"
+        >
+          @for (r of roles; track r) {
+            <mat-option [value]="r">{{ r }}</mat-option>
+          }
+        </mat-select>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="enabled">
+      <th mat-header-cell *matHeaderCellDef>Account Enabled</th>
+      <td mat-cell *matCellDef="let u">
+        <mat-slide-toggle
+          [checked]="u.enabled"
+          (change)="toggleEnabled(u)"
+          [disabled]="isSelf(u) || savingId() === u.id"
+        ></mat-slide-toggle>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let u">
+        <button
+          mat-stroked-button
+          (click)="resetPassword(u)"
+          [disabled]="isSelf(u) || savingId() === u.id"
+          [matTooltip]="isSelf(u) ? 'Use Change Password (account menu) for your own account' : 'Generate a new temporary password'"
+        >
+          <mat-icon>key</mat-icon>
+          Reset password
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+
+  @if (users().length === 0) {
+    <p class="empty-state">No users to show.</p>
+  }
+</mat-card>
+
+<p class="hint">
+  Your own account's role, enabled toggle, and password reset are locked
+  — a SUPER_ADMIN can't change their own role, disable themselves, or
+  reset their own password this way, since the first two could lock
+  everyone out with no one left to undo it, and the third already has
+  its own proper flow (Change Password, in the account menu). Ask
+  another SUPER_ADMIN to make those changes instead.
+</p>

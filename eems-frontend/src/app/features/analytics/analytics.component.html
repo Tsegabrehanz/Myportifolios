@@ -1,0 +1,180 @@
+<div class="page-header">
+  <h1>HR Analytics</h1>
+  <div class="header-controls">
+    @if (report(); as r) {
+      <mat-form-field appearance="outline" class="department-filter">
+        <mat-label>Department</mat-label>
+        <mat-select [value]="departmentFilter()" (selectionChange)="departmentFilter.set($event.value)">
+          <mat-option value="">All departments</mat-option>
+          @for (d of r.headcountByDepartment; track d.departmentName) {
+            <mat-option [value]="d.departmentName">{{ d.departmentName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+    <div class="export-actions">
+      <button mat-stroked-button (click)="exportExcel()" [disabled]="loading() || exporting() !== null">
+        @if (exporting() === 'xlsx') {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon>table_view</mat-icon>
+        }
+        Export Excel
+      </button>
+      <button mat-stroked-button (click)="exportPdf()" [disabled]="loading() || exporting() !== null">
+        @if (exporting() === 'pdf') {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon>picture_as_pdf</mat-icon>
+        }
+        Export PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="loading-state">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+} @else {
+  @if (report(); as r) {
+  <div class="stat-grid">
+    <mat-card class="stat-card">
+      <span class="stat-label">Active employees</span>
+      <span class="stat-value">{{ r.totalActiveEmployees }}</span>
+    </mat-card>
+    <mat-card class="stat-card">
+      <span class="stat-label">Total headcount</span>
+      <span class="stat-value">{{ r.totalHeadcountAllStatuses }}</span>
+    </mat-card>
+    <mat-card class="stat-card">
+      <span class="stat-label">Avg. tenure (years)</span>
+      <span class="stat-value">{{ r.averageTenureYears }}</span>
+    </mat-card>
+    <mat-card class="stat-card">
+      <span class="stat-label">New hires (12mo)</span>
+      <span class="stat-value">{{ r.newHiresLast12Months }}</span>
+    </mat-card>
+    <mat-card class="stat-card">
+      <span class="stat-label">Attrition rate</span>
+      <span class="stat-value">{{ r.attritionRatePercent }}%</span>
+    </mat-card>
+    <mat-card class="stat-card">
+      <span class="stat-label">Pending leave approvals</span>
+      <span class="stat-value">{{ r.pendingLeaveApprovals }}</span>
+    </mat-card>
+  </div>
+
+  <div class="chart-grid">
+    <mat-card class="chart-card">
+      <h3>Headcount by Department</h3>
+      <app-chart
+        type="bar"
+        [labels]="departmentLabels()"
+        [data]="departmentData()"
+        label="Employees"
+        description="Active employees per department right now. Doesn't include ONBOARDING, ON_LEAVE, OFFBOARDING, or OFFBOARDED statuses — see 'Headcount by Status' for those."
+      ></app-chart>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <h3>Headcount by Status</h3>
+      <app-chart
+        type="doughnut"
+        [labels]="statusLabels()"
+        [data]="statusData()"
+        description="Every employee record, split by employment status (ACTIVE, ON_LEAVE, ONBOARDING, OFFBOARDING, OFFBOARDED). Slice size shows relative share, not an absolute count — hover a slice for the exact number."
+      ></app-chart>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <h3>Leave Requests by Status</h3>
+      <app-chart
+        type="bar"
+        [labels]="leaveStatusLabels()"
+        [data]="leaveStatusData()"
+        label="Requests"
+        description="All leave requests ever submitted, grouped by where they ended up: PENDING (awaiting a decision), APPROVED, REJECTED, or CANCELLED. Not scoped to a time period."
+      ></app-chart>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <h3>Leave Requests by Type</h3>
+      <app-chart
+        type="doughnut"
+        [labels]="leaveTypeLabels()"
+        [data]="leaveTypeData()"
+        description="All leave requests broken down by type (ANNUAL, SICK, UNPAID, PARENTAL, OTHER), regardless of whether each was approved, rejected, or is still pending."
+      ></app-chart>
+    </mat-card>
+  </div>
+
+  <mat-card class="table-card">
+    <h3>Headcount by Department — detail</h3>
+    <table mat-table [dataSource]="departmentTableRows()" class="full-width">
+      <ng-container matColumnDef="department">
+        <th mat-header-cell *matHeaderCellDef>Department</th>
+        <td mat-cell *matCellDef="let row">{{ row.departmentName }}</td>
+      </ng-container>
+      <ng-container matColumnDef="headcount">
+        <th mat-header-cell *matHeaderCellDef>Active Headcount</th>
+        <td mat-cell *matCellDef="let row">{{ row.headcount }}</td>
+      </ng-container>
+      <ng-container matColumnDef="share">
+        <th mat-header-cell *matHeaderCellDef>Share of Total</th>
+        <td mat-cell *matCellDef="let row">{{ row.sharePercent }}%</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedTableColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedTableColumns"></tr>
+    </table>
+    @if (departmentTableRows().length === 0) {
+      <p class="empty-state">No departments match the current filter.</p>
+    }
+  </mat-card>
+
+  <mat-card class="powerbi-card">
+    <h3><mat-icon class="powerbi-icon">insights</mat-icon> Connect Power BI</h3>
+    <p class="hint">
+      For <strong>Power BI Desktop</strong> quick testing: use "Get Data →
+      Web", paste one of the URLs below, and add this access token as an
+      <code>Authorization: Bearer &lt;token&gt;</code> header under the
+      request's HTTP header credentials. The token expires in about an
+      hour — copy a fresh one if a refresh fails.
+    </p>
+
+    <div class="token-row">
+      <button mat-stroked-button (click)="copyAccessToken()">
+        <mat-icon>{{ tokenCopied() ? 'check' : 'content_copy' }}</mat-icon>
+        {{ tokenCopied() ? 'Copied' : 'Copy access token' }}
+      </button>
+    </div>
+
+    <table class="endpoint-table">
+      <tbody>
+        @for (endpoint of powerBiEndpoints; track endpoint.name) {
+          <tr>
+            <td class="endpoint-name">{{ endpoint.name }}</td>
+            <td class="endpoint-url">{{ endpoint.url }}</td>
+            <td>
+              <button mat-icon-button (click)="copyUrl(endpoint.url)" aria-label="Copy URL">
+                <mat-icon>content_copy</mat-icon>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <p class="hint production-note">
+      For <strong>production use with scheduled refresh</strong> in Power
+      BI Service, connect Power BI directly to the PostgreSQL database
+      instead of these API endpoints — a short-lived bearer token isn't a
+      good fit for unattended scheduled refresh. See
+      <code>db/powerbi-reporting-views.sql</code> and the "Power BI
+      integration" section of the backend README for the reporting views
+      and a dedicated read-only database role.
+    </p>
+  </mat-card>
+  }
+}

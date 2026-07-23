@@ -1,0 +1,286 @@
+@if (loading()) {
+  <div class="loading-state">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+} @else {
+  @if (employee(); as emp) {
+  <div class="page-header">
+    <div class="identity">
+      <div class="avatar-wrapper">
+        @if (photoUrl()) {
+          <img [src]="photoUrl()" alt="" class="avatar-photo" />
+        } @else {
+          <div class="avatar-initials">{{ initials }}</div>
+        }
+        @if (canEditPhoto) {
+          <input #photoInput type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+          <button mat-icon-button class="avatar-edit-btn" (click)="triggerPhotoPicker()" [disabled]="uploadingPhoto()" aria-label="Change photo">
+            @if (uploadingPhoto()) {
+              <mat-spinner diameter="16"></mat-spinner>
+            } @else {
+              <mat-icon>photo_camera</mat-icon>
+            }
+          </button>
+        }
+      </div>
+      <div>
+        <h1>{{ emp.firstName }} {{ emp.lastName }}</h1>
+        @if (photoUrl() && canEditPhoto) {
+          <button mat-button class="remove-photo-btn" (click)="removePhoto()">Remove photo</button>
+        }
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="downloadOfferLetter()" [disabled]="generatingOfferLetter()">
+        @if (generatingOfferLetter()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon>description</mat-icon>
+        }
+        Offer letter
+      </button>
+      <a mat-stroked-button [routerLink]="['/employees', emp.id, 'edit']">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </a>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <mat-card class="error-card">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ errorMessage() }}</span>
+    </mat-card>
+  }
+
+  <div class="profile-grid">
+    <mat-card class="core-info-card">
+      <h3>Employment</h3>
+      <dl>
+        <dt>Employee ID</dt>
+        <dd>{{ emp.employeeCode || '—' }}</dd>
+        <dt>Position</dt>
+        <dd>{{ emp.positionTitle || '—' }}</dd>
+        <dt>Department</dt>
+        <dd>{{ emp.departmentName || '—' }}</dd>
+        <dt>Manager</dt>
+        <dd>{{ emp.managerName || '—' }}</dd>
+        <dt>Status</dt>
+        <dd><mat-chip>{{ emp.status }}</mat-chip></dd>
+        <dt>Hire date</dt>
+        <dd>{{ emp.hireDate }}</dd>
+        @if (emp.exitDate) {
+          <dt>Exit date</dt>
+          <dd>{{ emp.exitDate }}</dd>
+        }
+      </dl>
+    </mat-card>
+
+    <mat-card class="address-card">
+      <div class="card-header-row">
+        <h3>Address</h3>
+        @if (canEditAddress) {
+          <button mat-icon-button (click)="toggleEditAddress()" aria-label="Edit address">
+            <mat-icon>{{ editingAddress() ? 'close' : 'edit' }}</mat-icon>
+          </button>
+        }
+      </div>
+
+      @if (editingAddress()) {
+        <form [formGroup]="addressForm" (ngSubmit)="saveAddress()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Street</mat-label>
+            <input matInput formControlName="street" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Postal code</mat-label>
+            <input matInput formControlName="postalCode" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Country</mat-label>
+            <input matInput formControlName="country" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" type="submit" [disabled]="savingAddress()">
+            @if (savingAddress()) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              Save
+            }
+          </button>
+        </form>
+      } @else {
+        <dl>
+          <dt>Street</dt>
+          <dd>{{ addressForm.get('street')?.value || '—' }}</dd>
+          <dt>City</dt>
+          <dd>{{ addressForm.get('city')?.value || '—' }}</dd>
+          <dt>Postal code</dt>
+          <dd>{{ addressForm.get('postalCode')?.value || '—' }}</dd>
+          <dt>Country</dt>
+          <dd>{{ addressForm.get('country')?.value || '—' }}</dd>
+        </dl>
+      }
+    </mat-card>
+
+    <mat-card class="contacts-card">
+      <div class="card-header-row">
+        <h3>Emergency Contacts</h3>
+        <button mat-icon-button (click)="toggleAddContact()" aria-label="Add emergency contact">
+          <mat-icon>{{ addingContact() ? 'close' : 'add' }}</mat-icon>
+        </button>
+      </div>
+
+      @if (addingContact()) {
+        <form [formGroup]="contactForm" (ngSubmit)="submitContact()" class="inline-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Relationship</mat-label>
+            <input matInput formControlName="relationship" placeholder="e.g. Spouse" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" type="submit" [disabled]="contactForm.invalid || savingContact()">
+            @if (savingContact()) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              Add
+            }
+          </button>
+        </form>
+      }
+
+      @if (contacts().length === 0) {
+        <p class="empty-inline">No emergency contacts on file.</p>
+      } @else {
+        @for (c of contacts(); track c.id) {
+          <div class="list-row">
+            <div>
+              <strong>{{ c.name }}</strong>
+              @if (c.relationship) {
+                <span class="muted"> · {{ c.relationship }}</span>
+              }
+              <div class="muted">{{ c.phone }} {{ c.phone && c.email ? '·' : '' }} {{ c.email }}</div>
+            </div>
+            <button mat-icon-button color="warn" (click)="deleteContact(c)" aria-label="Remove contact">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      }
+    </mat-card>
+
+    <mat-card class="documents-card">
+      <div class="card-header-row">
+        <h3>Documents</h3>
+        <button mat-icon-button (click)="toggleAddDocument()" aria-label="Upload document">
+          <mat-icon>{{ addingDocument() ? 'close' : 'upload_file' }}</mat-icon>
+        </button>
+      </div>
+
+      @if (addingDocument()) {
+        <form [formGroup]="uploadForm" (ngSubmit)="submitUpload()" class="inline-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Document type</mat-label>
+            <input matInput formControlName="documentType" placeholder="e.g. Passport, Contract, CV" />
+          </mat-form-field>
+
+          <input #fileInput type="file" hidden (change)="onFileSelected($event)" />
+          <button mat-stroked-button type="button" (click)="triggerFilePicker()">
+            <mat-icon>attach_file</mat-icon>
+            {{ selectedFileName() || 'Choose file' }}
+          </button>
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="uploadForm.invalid || !selectedFileName() || savingDocument()">
+            @if (savingDocument()) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              Upload
+            }
+          </button>
+        </form>
+
+        <button mat-button type="button" class="link-toggle" (click)="toggleExternalLink()">
+          {{ addingExternalLink() ? 'Cancel' : "Or link to a file stored elsewhere instead" }}
+        </button>
+
+        @if (addingExternalLink()) {
+          <form [formGroup]="linkForm" (ngSubmit)="submitLink()" class="inline-form">
+            <mat-form-field appearance="outline">
+              <mat-label>Document type</mat-label>
+              <input matInput formControlName="documentType" placeholder="e.g. Passport, Contract" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>File name</mat-label>
+              <input matInput formControlName="fileName" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>File URL</mat-label>
+              <input matInput formControlName="fileUrl" placeholder="https://..." />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Expiry date (optional)</mat-label>
+              <input matInput type="date" formControlName="expiryDate" />
+            </mat-form-field>
+            <button mat-flat-button color="primary" type="submit" [disabled]="linkForm.invalid || savingDocument()">
+              @if (savingDocument()) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                Add link
+              }
+            </button>
+          </form>
+        }
+      }
+
+      @if (documents().length === 0) {
+        <p class="empty-inline">No documents on file.</p>
+      } @else {
+        @for (d of documents(); track d.id) {
+          <div class="list-row">
+            <div>
+              <strong>{{ d.documentType }}</strong>
+              <span class="muted"> · {{ d.fileName }}</span>
+              @if (d.fileSizeBytes) {
+                <span class="muted"> · {{ (d.fileSizeBytes / 1024) | number: '1.0-0' }} KB</span>
+              }
+              @if (d.expiryDate) {
+                <div class="muted">Expires {{ d.expiryDate }}</div>
+              }
+              @if (d.fileUrl) {
+                <div><a [href]="d.fileUrl" target="_blank" rel="noopener">{{ d.fileUrl }}</a></div>
+              }
+            </div>
+            <div class="document-actions">
+              @if (d.downloadable) {
+                <button mat-icon-button (click)="downloadDocument(d)" [disabled]="downloadingId() === d.id" aria-label="Download">
+                  @if (downloadingId() === d.id) {
+                    <mat-spinner diameter="18"></mat-spinner>
+                  } @else {
+                    <mat-icon>download</mat-icon>
+                  }
+                </button>
+              }
+              <button mat-icon-button color="warn" (click)="deleteDocument(d)" aria-label="Remove document">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </mat-card>
+  </div>
+  }
+}

@@ -1,0 +1,81 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.page-header button,
+.header-actions a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 8px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+}
+
+.error-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-left: 4px solid #c62828;
+  color: #c62828;
+}
+
+.import-result {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-left: 4px solid #2e7d32;
+
+  &.has-failures {
+    border-left-color: #ef6c00;
+  }
+}
+
+.import-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.failure-count {
+  color: #ef6c00;
+}
+
+.dismiss-btn {
+  margin-left: auto;
+}
+
+.failure-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 0.8125rem;
+  color: #666;
+}

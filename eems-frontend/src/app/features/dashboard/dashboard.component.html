@@ -1,0 +1,212 @@
+<div class="dashboard-header">
+  <div>
+    <h1>{{ greeting }}</h1>
+    <p class="subtitle">Signed in as {{ authService.currentUser()?.email }} ({{ authService.currentUser()?.role }})</p>
+  </div>
+  <div class="refresh-control">
+    <span class="last-updated">
+      @if (refreshing()) {
+        Refreshing…
+      } @else if (lastUpdated()) {
+        Updated {{ secondsSinceUpdate() < 5 ? 'just now' : secondsSinceUpdate() + 's ago' }}
+      }
+    </span>
+    <button mat-icon-button (click)="loadAll()" [disabled]="refreshing()" aria-label="Refresh now" matTooltip="Refresh now">
+      @if (refreshing()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon>refresh</mat-icon>
+      }
+    </button>
+  </div>
+</div>
+
+<div class="dashboard-layout" [class.no-sidebar]="!canViewAnalytics">
+  <div class="main-column">
+    <div class="card-grid">
+      <a class="clickable-card" routerLink="/employees">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              @switch (authService.currentUser()?.role) {
+                @case ('EMPLOYEE') { My record }
+                @default { Employees visible to you }
+              }
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="stat">{{ visibleEmployeeCount() ?? '…' }}</p>
+          </mat-card-content>
+        </mat-card>
+      </a>
+
+      @if (canDecideLeave) {
+        <mat-card class="clickable-card" [class.expanded-card]="approvalsExpanded()" (click)="toggleApprovals()">
+          <mat-card-header>
+            <mat-card-title>
+              Pending leave approvals
+              <mat-icon class="expand-icon">{{ approvalsExpanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="stat">{{ pendingLeaveCount() ?? '…' }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <a class="clickable-card" routerLink="/leave">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Your leave requests</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="stat">{{ myLeaveCount() ?? '…' }}</p>
+          </mat-card-content>
+        </mat-card>
+      </a>
+    </div>
+
+    @if (canDecideLeave && approvalsExpanded()) {
+      <mat-card class="approvals-panel">
+        @if (pendingRequests.length === 0) {
+          <p class="empty-inline">Nothing pending — you're all caught up.</p>
+        } @else {
+          @for (req of pendingRequests; track req.id) {
+            <div class="approval-row">
+              <div class="approval-info">
+                <strong>{{ req.employeeName }}</strong>
+                <span class="approval-meta">{{ req.type }} · {{ req.startDate }} → {{ req.endDate }}</span>
+                @if (req.reason) {
+                  <span class="approval-reason">"{{ req.reason }}"</span>
+                }
+              </div>
+              <div class="approval-actions">
+                @if (decidingId() === req.id) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                } @else {
+                  <button mat-icon-button color="primary" (click)="approve(req); $event.stopPropagation()" aria-label="Approve">
+                    <mat-icon>check_circle</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="reject(req); $event.stopPropagation()" aria-label="Reject">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+      </mat-card>
+    }
+
+    <mat-card class="quick-leave-card">
+      <button mat-button class="quick-leave-toggle" (click)="toggleRequestForm()">
+        <mat-icon>{{ requestFormOpen() ? 'expand_less' : 'add_circle_outline' }}</mat-icon>
+        Request leave
+      </button>
+
+      @if (requestFormOpen()) {
+        <form [formGroup]="quickLeaveForm" (ngSubmit)="submitQuickLeave()" class="quick-leave-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Type</mat-label>
+            <mat-select formControlName="type">
+              @for (t of leaveTypes; track t) {
+                <mat-option [value]="t">{{ t }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Start date</mat-label>
+            <input matInput type="date" formControlName="startDate" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>End date</mat-label>
+            <input matInput type="date" formControlName="endDate" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="reason-field">
+            <mat-label>Reason (optional)</mat-label>
+            <input matInput formControlName="reason" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" type="submit" [disabled]="quickLeaveForm.invalid || submittingLeave()">
+            @if (submittingLeave()) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              Submit
+            }
+          </button>
+        </form>
+      }
+    </mat-card>
+
+    <div class="quick-links">
+      @if (authService.currentUser()?.employeeId; as myEmployeeId) {
+        <a mat-stroked-button [routerLink]="['/employees', myEmployeeId]">
+          <mat-icon>badge</mat-icon>
+          My Profile
+        </a>
+      }
+      <a mat-stroked-button routerLink="/employees">
+        <mat-icon>people</mat-icon>
+        Employees
+      </a>
+      <a mat-stroked-button routerLink="/leave">
+        <mat-icon>event_available</mat-icon>
+        Leave
+      </a>
+      @if (canManageDepartments) {
+        <a mat-stroked-button routerLink="/departments">
+          <mat-icon>apartment</mat-icon>
+          Departments
+        </a>
+        <a mat-stroked-button routerLink="/positions">
+          <mat-icon>badge</mat-icon>
+          Positions
+        </a>
+      }
+      @if (canViewAnalytics) {
+        <a mat-stroked-button routerLink="/analytics">
+          <mat-icon>insights</mat-icon>
+          HR Analytics
+        </a>
+      }
+      <a mat-stroked-button routerLink="/change-password">
+        <mat-icon>lock_reset</mat-icon>
+        Change password
+      </a>
+    </div>
+  </div>
+
+  @if (canViewAnalytics) {
+    <aside class="analytics-sidebar">
+      @if (hrSummary(); as r) {
+        <mat-card class="sidebar-card">
+          <div class="sidebar-card-header">
+            <h3>Attrition rate (12mo)</h3>
+          </div>
+          <p class="sidebar-stat">{{ r.attritionRatePercent }}%</p>
+        </mat-card>
+
+        <mat-card class="sidebar-card">
+          <div class="sidebar-card-header">
+            <h3>Headcount by Department</h3>
+          </div>
+          <app-chart
+            type="bar"
+            [labels]="departmentLabels()"
+            [data]="departmentData()"
+            label="Employees"
+            [height]="200"
+            description="Active headcount grouped by department, as of today. Taller bars mean more people currently assigned to that department."
+          ></app-chart>
+        </mat-card>
+
+        <a mat-stroked-button routerLink="/analytics" class="full-analytics-link">
+          Full analytics <mat-icon>arrow_forward</mat-icon>
+        </a>
+      } @else {
+        <mat-card class="sidebar-card">
+          <mat-spinner diameter="28"></mat-spinner>
+        </mat-card>
+      }
+    </aside>
+  }
+</div>

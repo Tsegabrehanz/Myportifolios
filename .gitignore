@@ -1,0 +1,34 @@
+# --- Backend (Maven) ---
+eems-backend/target/
+eems-backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# --- Frontend build output (also covered inside eems-frontend/.gitignore,
+# repeated here in case anything is ever run from the repo root) ---
+eems-frontend/dist/
+eems-frontend/node_modules/
+eems-frontend/.angular/
+
+# --- IDEs/editors ---
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.iml
+.project
+.classpath
+.settings/
+
+# --- OS noise ---
+.DS_Store
+Thumbs.db
+
+# --- Local env overrides - .env.example is committed, .env (with a real
+# secret in it) is NOT ---
+.env
+
+# --- Logs ---
+*.log
+npm-debug.log*

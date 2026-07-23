@@ -1,0 +1,43 @@
+.subtitle {
+  color: #666;
+  margin-bottom: 16px;
+  max-width: 640px;
+}
+
+.bulk-actions {
+  margin-bottom: 16px;
+
+  .inline-form {
+    padding-top: 12px;
+  }
+}
+
+.allocate-card {
+  margin-bottom: 16px;
+  padding: 16px;
+
+  h3 {
+    margin-top: 0;
+  }
+}
+
+.inline-form {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.over-budget {
+  color: #c62828;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+}

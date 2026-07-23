@@ -1,0 +1,67 @@
+<h1>Audit Log</h1>
+<p class="subtitle">Every create/update/delete/decision/login action across the system. SUPER_ADMIN and AUDITOR only.</p>
+
+<mat-card class="filter-card">
+  <div class="filter-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Entity (e.g. Employee, LeaveRequest, User)</mat-label>
+      <input matInput [(ngModel)]="entityFilter" (keyup.enter)="applyFilters()" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Actor email</mat-label>
+      <input matInput [(ngModel)]="actorFilter" (keyup.enter)="applyFilters()" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="applyFilters()">Filter</button>
+    <button mat-button (click)="clearFilters()">Clear</button>
+  </div>
+</mat-card>
+
+<mat-card>
+  @if (loading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+  } @else {
+    <table mat-table [dataSource]="entries()" class="full-width">
+      <ng-container matColumnDef="timestamp">
+        <th mat-header-cell *matHeaderCellDef>When</th>
+        <td mat-cell *matCellDef="let e">{{ e.timestamp | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actorEmail">
+        <th mat-header-cell *matHeaderCellDef>Actor</th>
+        <td mat-cell *matCellDef="let e">{{ e.actorEmail }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="entity">
+        <th mat-header-cell *matHeaderCellDef>Entity</th>
+        <td mat-cell *matCellDef="let e">{{ e.entity }} #{{ e.entityId }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef>Action</th>
+        <td mat-cell *matCellDef="let e">{{ e.action }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="detail">
+        <th mat-header-cell *matHeaderCellDef>Detail</th>
+        <td mat-cell *matCellDef="let e">{{ e.detail || '—' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+
+    @if (entries().length === 0) {
+      <p class="empty-state">No audit log entries match this filter.</p>
+    }
+
+    <mat-paginator
+      [length]="totalElements()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      (page)="onPage($event)"
+    ></mat-paginator>
+  }
+</mat-card>

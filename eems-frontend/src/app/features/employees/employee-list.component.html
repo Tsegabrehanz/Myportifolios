@@ -1,0 +1,160 @@
+<div class="page-header">
+  <h1>Employees</h1>
+  <div class="header-actions">
+    @if (canCreate) {
+      <a mat-flat-button color="primary" routerLink="/employees/new">
+        <mat-icon>person_add</mat-icon>
+        New Employee
+      </a>
+    }
+    @if (canImport) {
+      <input #fileInput type="file" accept=".csv,.xlsx,.xls" hidden (change)="onFileSelected($event)" />
+      <button mat-stroked-button (click)="triggerFilePicker()" [disabled]="importing()">
+        @if (importing()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon>upload_file</mat-icon>
+        }
+        Import CSV/Excel
+      </button>
+      <a mat-button href="templates/employees-template.csv" download>
+        <mat-icon>description</mat-icon>
+        Download template
+      </a>
+      <button mat-stroked-button (click)="exportCsv()" [disabled]="exporting()">
+        @if (exporting()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon>download</mat-icon>
+        }
+        Export CSV
+      </button>
+    }
+  </div>
+</div>
+
+<p class="subtitle">
+  @switch (authService.currentUser()?.role) {
+    @case ('EMPLOYEE') { Showing your own record. }
+    @case ('MANAGER') { Showing your direct reports. }
+    @default { Showing all employees. }
+  }
+</p>
+
+<mat-form-field appearance="outline" class="search-field">
+  <mat-label>Search by name, email, or employee ID</mat-label>
+  <input matInput [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)" placeholder="e.g. Jane Doe, jane@eems.local, EMP-0007" />
+  <mat-icon matPrefix>search</mat-icon>
+  @if (searchTerm()) {
+    <button mat-icon-button matSuffix (click)="onSearchChange('')" aria-label="Clear search">
+      <mat-icon>close</mat-icon>
+    </button>
+  }
+</mat-form-field>
+
+@if (errorMessage()) {
+  <mat-card class="error-card">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage() }}</span>
+  </mat-card>
+}
+
+@if (importResult(); as result) {
+  <mat-card class="import-result" [class.has-failures]="result.failureCount > 0">
+    <div class="import-summary">
+      <strong>Import complete:</strong>
+      {{ result.successCount }} of {{ result.totalRows }} rows created
+      @if (result.failureCount > 0) {
+        <span class="failure-count">({{ result.failureCount }} failed)</span>
+      }
+      <button mat-icon-button (click)="dismissImportResult()" aria-label="Dismiss" class="dismiss-btn">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    @if (result.failureCount > 0) {
+      <ul class="failure-list">
+        @for (row of result.rows; track row.rowNumber) {
+          @if (!row.success) {
+            <li>Row {{ row.rowNumber }} ({{ row.email || 'no email' }}): {{ row.message }}</li>
+          }
+        }
+      </ul>
+    }
+  </mat-card>
+}
+
+<mat-card>
+  <table mat-table [dataSource]="pagedEmployees()" class="full-width">
+    <ng-container matColumnDef="employeeCode">
+      <th mat-header-cell *matHeaderCellDef>Employee ID</th>
+      <td mat-cell *matCellDef="let e">{{ e.employeeCode || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let e">{{ e.firstName }} {{ e.lastName }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="position">
+      <th mat-header-cell *matHeaderCellDef>Position</th>
+      <td mat-cell *matCellDef="let e">{{ e.positionTitle || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="department">
+      <th mat-header-cell *matHeaderCellDef>Department</th>
+      <td mat-cell *matCellDef="let e">{{ e.departmentName || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="manager">
+      <th mat-header-cell *matHeaderCellDef>Manager</th>
+      <td mat-cell *matCellDef="let e">{{ e.managerName || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let e">
+        <mat-chip>{{ e.status }}</mat-chip>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="hireDate">
+      <th mat-header-cell *matHeaderCellDef>Hire Date</th>
+      <td mat-cell *matCellDef="let e">{{ e.hireDate }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let e">
+        <a mat-icon-button [routerLink]="['/employees', e.id]" aria-label="View profile">
+          <mat-icon>visibility</mat-icon>
+        </a>
+        @if (canEdit) {
+          <a mat-icon-button [routerLink]="['/employees', e.id, 'edit']" aria-label="Edit">
+            <mat-icon>edit</mat-icon>
+          </a>
+        }
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+
+  @if (filteredEmployees().length === 0) {
+    <p class="empty-state">
+      @if (searchTerm()) {
+        No employees match "{{ searchTerm() }}".
+      } @else {
+        No employees to show.
+      }
+    </p>
+  } @else {
+    <mat-paginator
+      [length]="filteredEmployees().length"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      (page)="onPage($event)"
+    ></mat-paginator>
+  }
+</mat-card>

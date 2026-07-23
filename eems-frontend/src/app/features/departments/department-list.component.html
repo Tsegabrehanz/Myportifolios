@@ -1,0 +1,107 @@
+<div class="page-header">
+  <h1>Departments</h1>
+  <div class="header-actions">
+    <input #fileInput type="file" accept=".csv" hidden (change)="onFileSelected($event)" />
+    <button mat-stroked-button (click)="triggerFilePicker()" [disabled]="importing()">
+      @if (importing()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon>upload_file</mat-icon>
+      }
+      Import CSV
+    </button>
+    <a mat-button href="templates/departments-template.csv" download>
+      <mat-icon>description</mat-icon>
+      Download template
+    </a>
+    <button mat-stroked-button (click)="exportCsv()" [disabled]="exporting()">
+      @if (exporting()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon>download</mat-icon>
+      }
+      Export CSV
+    </button>
+  </div>
+</div>
+
+@if (importResult(); as result) {
+  <mat-card class="import-result" [class.has-failures]="result.failureCount > 0">
+    <div class="import-summary">
+      <strong>Import complete:</strong>
+      {{ result.successCount }} of {{ result.totalRows }} rows created
+      @if (result.failureCount > 0) {
+        <span class="failure-count">({{ result.failureCount }} failed)</span>
+      }
+      <button mat-icon-button (click)="dismissImportResult()" aria-label="Dismiss" class="dismiss-btn">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    @if (result.failureCount > 0) {
+      <ul class="failure-list">
+        @for (row of result.rows; track row.rowNumber) {
+          @if (!row.success) {
+            <li>Row {{ row.rowNumber }} ({{ row.name || 'no name' }}): {{ row.message }}</li>
+          }
+        }
+      </ul>
+    }
+  </mat-card>
+}
+
+@if (errorMessage()) {
+  <mat-card class="error-card">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage() }}</span>
+  </mat-card>
+}
+
+<mat-card class="create-card">
+  <form [formGroup]="form" (ngSubmit)="create()" class="inline-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Location</mat-label>
+      <input matInput formControlName="location" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Add department</button>
+  </form>
+</mat-card>
+
+<mat-card>
+  <table mat-table [dataSource]="departments()" class="full-width">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let d">{{ d.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="location">
+      <th mat-header-cell *matHeaderCellDef>Location</th>
+      <td mat-cell *matCellDef="let d">{{ d.location || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let d">
+        <button
+          mat-icon-button
+          color="warn"
+          (click)="deleteDepartment(d)"
+          [disabled]="deletingId() === d.id"
+          aria-label="Delete department"
+        >
+          @if (deletingId() === d.id) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <mat-icon>delete</mat-icon>
+          }
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+</mat-card>

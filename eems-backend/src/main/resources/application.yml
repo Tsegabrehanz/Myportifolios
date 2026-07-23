@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: eems-backend
+  profiles:
+    active: dev
+  jackson:
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+
+# Real employee document uploads (FileStorageService) live here - one
+# subfolder per employee under this directory. Defaults to /tmp for
+# local/dev convenience (wiped on every reboot); override with a real
+# persistent path for anything beyond throwaway testing. The docker
+# profile's docker-compose.yml mounts a named volume at this same path
+# so uploads survive a container restart.
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:/tmp/eems-uploads}
+
+jwt:
+  secret: ${JWT_SECRET:change-this-to-a-long-random-secret-in-production-min-256-bits}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}     # 1 hour access token
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000} # 24 hours
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:eemsdb;DB_CLOSE_DELAY=-1;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/eemsdb}
+    username: ${DB_USERNAME:eems_user}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+---
+# Used by docker-compose.yml. Real PostgreSQL (unlike "dev"'s in-memory
+# H2), but with ddl-auto=update instead of "prod"'s validate, so the
+# compose stack is self-contained and doesn't require running a separate
+# migration tool first. This is a convenience for a demo/local
+# containerized stack, NOT a substitute for "prod" + Flyway/Liquibase in
+# a real deployment - schema drift from auto-update is fine for a
+# throwaway demo database, not for one with real data you care about.
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://postgres:5432/eemsdb}
+    username: ${DB_USERNAME:eems_user}
+    password: ${DB_PASSWORD:eems_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect

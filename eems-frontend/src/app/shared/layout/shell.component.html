@@ -1,0 +1,121 @@
+<div class="shell" [class.collapsed]="sidebarCollapsed()">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a routerLink="/dashboard" class="brand">
+        <img [src]="brandingService.logoUrl()" alt="EEMS logo" class="brand-logo" width="32" height="32" />
+        @if (!sidebarCollapsed()) {
+          <span class="brand-name">EEMS</span>
+        }
+      </a>
+    </div>
+
+    <nav class="nav-links">
+      <a mat-button routerLink="/dashboard" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Dashboard' : ''" matTooltipPosition="right">
+        <mat-icon>dashboard</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Dashboard</span> }
+      </a>
+      <a mat-button routerLink="/employees" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Employees' : ''" matTooltipPosition="right">
+        <mat-icon>people</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Employees</span> }
+      </a>
+      @if (isHrOrAdmin) {
+        <a mat-button routerLink="/departments" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Departments' : ''" matTooltipPosition="right">
+          <mat-icon>apartment</mat-icon>
+          @if (!sidebarCollapsed()) { <span>Departments</span> }
+        </a>
+        <a mat-button routerLink="/positions" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Positions' : ''" matTooltipPosition="right">
+          <mat-icon>badge</mat-icon>
+          @if (!sidebarCollapsed()) { <span>Positions</span> }
+        </a>
+      }
+      <a mat-button routerLink="/leave" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Leave' : ''" matTooltipPosition="right">
+        <mat-icon>event_available</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Leave</span> }
+      </a>
+      <a mat-button routerLink="/job-postings" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Job Postings' : ''" matTooltipPosition="right">
+        <mat-icon>work_outline</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Job Postings</span> }
+      </a>
+      <a mat-button routerLink="/org-chart" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Org Chart' : ''" matTooltipPosition="right">
+        <mat-icon>account_tree</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Org Chart</span> }
+      </a>
+      @if (isHrOrAdmin) {
+        <a mat-button routerLink="/leave-balances" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Leave Balances' : ''" matTooltipPosition="right">
+          <mat-icon>calculate</mat-icon>
+          @if (!sidebarCollapsed()) { <span>Leave Balances</span> }
+        </a>
+      }
+      @if (canViewAnalytics) {
+        <a mat-button routerLink="/analytics" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Analytics' : ''" matTooltipPosition="right">
+          <mat-icon>insights</mat-icon>
+          @if (!sidebarCollapsed()) { <span>Analytics</span> }
+        </a>
+      }
+
+      <div class="nav-divider"></div>
+
+      @if (isSuperAdmin) {
+        <a mat-button routerLink="/admin/users" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Users' : ''" matTooltipPosition="right">
+          <mat-icon>admin_panel_settings</mat-icon>
+          @if (!sidebarCollapsed()) { <span>Users</span> }
+        </a>
+      }
+      @if (isAuditorOrAbove) {
+        <a mat-button routerLink="/audit-logs" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Audit Log' : ''" matTooltipPosition="right">
+          <mat-icon>history</mat-icon>
+          @if (!sidebarCollapsed()) { <span>Audit Log</span> }
+        </a>
+      }
+
+      <div class="nav-divider"></div>
+
+      <a mat-button routerLink="/change-password" routerLinkActive="active-link" [matTooltip]="sidebarCollapsed() ? 'Change password' : ''" matTooltipPosition="right">
+        <mat-icon>lock_reset</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Change password</span> }
+      </a>
+    </nav>
+
+    <button mat-icon-button class="collapse-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed() ? 'Expand menu' : 'Collapse menu'">
+      <mat-icon>{{ sidebarCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+  </aside>
+
+  <div class="main-column">
+    <header class="top-bar">
+      <span class="spacer"></span>
+      <button mat-button [matMenuTriggerFor]="accountMenu" class="account-trigger">
+        <mat-icon class="account-icon">account_circle</mat-icon>
+        {{ authService.currentUser()?.email }}
+      </button>
+      <mat-menu #accountMenu="matMenu">
+        <button mat-menu-item routerLink="/change-password">
+          <mat-icon>lock_reset</mat-icon>
+          <span>Change password</span>
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Log out</span>
+        </button>
+      </mat-menu>
+    </header>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <span class="footer-brand">
+          <img [src]="brandingService.logoUrl()" alt="" class="footer-logo" width="18" height="18" />
+          EEMS
+        </span>
+        <span class="footer-meta">
+          Signed in as {{ authService.currentUser()?.email }} · Role: {{ authService.currentUser()?.role }}
+        </span>
+        <span class="footer-copyright">&copy; {{ currentYear }} Enterprise Employee Management System</span>
+        <span class="footer-powered-by">Powered by Tsegabrehan</span>
+      </div>
+    </footer>
+  </div>
+</div>

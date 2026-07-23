@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: eemsdb
+      POSTGRES_USER: eems_user
+      POSTGRES_PASSWORD: eems_password
+    volumes:
+      - eems_pg_data:/var/lib/postgresql/data
+    # Host port 5433, not 5432 - avoids clashing with a Postgres instance
+    # that might already be running natively on the host. This only
+    # affects connections from outside Docker (e.g. psql on your
+    # machine, or Power BI Desktop's direct-DB connection) - the
+    # backend container talks to "postgres:5432" over the internal
+    # Docker network regardless, so this change doesn't touch that.
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eems_user -d eemsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./eems-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:postgresql://postgres:5432/eemsdb
+      DB_USERNAME: eems_user
+      DB_PASSWORD: eems_password
+      # Override with a real 256-bit+ random value for anything beyond
+      # local/demo use - see README.md "Docker" section.
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-long-random-secret-in-production-min-256-bits}
+      FILE_UPLOAD_DIR: /app/uploads
+    volumes:
+      # Real employee document uploads (FileStorageService) live here -
+      # named volume so they survive `docker compose down` (without -v)
+      # and a container recreate, unlike the container's own filesystem.
+      - eems_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./eems-frontend
+    depends_on:
+      - backend
+    # Host port 4300, not 4200 - avoids clashing with `ng serve`/`npm
+    # start` if you're also running the frontend locally for
+    # development. The container listens on 80 internally either way.
+    ports:
+      - "4300:80"
+
+volumes:
+  eems_pg_data:
+  eems_uploads:

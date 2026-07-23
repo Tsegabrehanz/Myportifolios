@@ -1,0 +1,149 @@
+<h1>{{ isEditMode() ? 'Edit Employee' : 'New Employee' }}</h1>
+
+@if (loading()) {
+  <div class="loading-state">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+} @else if (generatedEmail() || generatedPassword()) {
+  <mat-card class="credentials-card">
+    <div class="credentials-header">
+      <mat-icon class="credentials-icon">verified_user</mat-icon>
+      <h2>Employee created</h2>
+    </div>
+    <p class="credentials-warning">
+      Copy these now — the temporary password can't be shown again after
+      you leave this page. Share it with the new hire out-of-band (not
+      email, since there's no email delivery in this app); they'll be
+      required to set their own password on first login.
+    </p>
+
+    @if (generatedEmail(); as email) {
+      <div class="credential-row">
+        <div>
+          <span class="credential-label">Login email</span>
+          <span class="credential-value">{{ email }}</span>
+        </div>
+        <button mat-icon-button (click)="copyToClipboard('email', email)" aria-label="Copy email">
+          <mat-icon>{{ copiedField() === 'email' ? 'check' : 'content_copy' }}</mat-icon>
+        </button>
+      </div>
+    }
+
+    @if (generatedPassword(); as password) {
+      <div class="credential-row">
+        <div>
+          <span class="credential-label">Temporary password</span>
+          <span class="credential-value monospace">{{ password }}</span>
+        </div>
+        <button mat-icon-button (click)="copyToClipboard('password', password)" aria-label="Copy password">
+          <mat-icon>{{ copiedField() === 'password' ? 'check' : 'content_copy' }}</mat-icon>
+        </button>
+      </div>
+    }
+
+    <button mat-flat-button color="primary" (click)="doneViewingCredentials()" class="done-btn">
+      Done — I've copied these
+    </button>
+  </mat-card>
+} @else {
+  <mat-card class="form-card">
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>First name</mat-label>
+          <input matInput formControlName="firstName" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Last name</mat-label>
+          <input matInput formControlName="lastName" />
+        </mat-form-field>
+      </div>
+
+      @if (!isEditMode()) {
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Email (optional)</mat-label>
+            <input matInput type="email" formControlName="email" placeholder="Auto-generated if left blank" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Hire date</mat-label>
+            <input matInput type="date" formControlName="hireDate" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Initial password (optional)</mat-label>
+            <input matInput type="text" formControlName="initialPassword" placeholder="Auto-generated secure temporary password if left blank" />
+          </mat-form-field>
+        </div>
+        <p class="hint">
+          Leave email and password blank to have the system generate them —
+          a unique login email and a secure random temporary password
+          that must be changed on first login. Shown once, right after
+          creation.
+        </p>
+      }
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Position</mat-label>
+          <mat-select formControlName="positionId">
+            <mat-option [value]="null">—</mat-option>
+            @for (p of positions(); track p.id) {
+              <mat-option [value]="p.id">{{ p.title }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Department</mat-label>
+          <mat-select formControlName="departmentId">
+            <mat-option [value]="null">—</mat-option>
+            @for (d of departments(); track d.id) {
+              <mat-option [value]="d.id">{{ d.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Manager</mat-label>
+          <mat-select formControlName="managerId">
+            <mat-option [value]="null">—</mat-option>
+            @for (m of potentialManagers(); track m.id) {
+              <mat-option [value]="m.id">{{ m.firstName }} {{ m.lastName }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (isEditMode()) {
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              @for (s of statuses; track s) {
+                <mat-option [value]="s">{{ s }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p class="error">{{ errorMessage() }}</p>
+      }
+
+      <div class="form-actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || saving()">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            {{ isEditMode() ? 'Save changes' : 'Create employee' }}
+          }
+        </button>
+        <a mat-button routerLink="/employees">Cancel</a>
+      </div>
+    </form>
+  </mat-card>
+}

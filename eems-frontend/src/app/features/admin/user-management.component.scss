@@ -1,0 +1,157 @@
+.subtitle {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.role-select {
+  min-width: 160px;
+}
+
+.you-chip {
+  margin-left: 8px;
+  font-size: 0.6875rem;
+  min-height: 20px;
+  padding: 0 8px;
+}
+
+.pending-change-icon {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  vertical-align: middle;
+  margin-left: 6px;
+  color: #ef6c00;
+}
+
+.reset-card {
+  max-width: 480px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.reset-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+}
+
+.reset-icon {
+  color: #2e7d32;
+}
+
+.reset-warning {
+  color: #666;
+  font-size: 0.8125rem;
+  margin: 0 0 16px;
+}
+
+.reset-password-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.reset-done-btn {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.branding-card {
+  margin-bottom: 16px;
+  padding: 16px;
+
+  h3 {
+    margin-top: 0;
+  }
+}
+
+.branding-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-preview {
+  border-radius: 8px;
+  object-fit: contain;
+  background: #f5f6fa;
+  padding: 4px;
+}
+
+.branding-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.branding-hint {
+  color: #999;
+  font-size: 0.75rem;
+  margin: 12px 0 0;
+}
+
+.branding-error {
+  color: #c62828;
+  font-size: 0.8125rem;
+  margin: 8px 0 0;
+}
+
+.employee-id-card {
+  margin-bottom: 16px;
+  padding: 16px;
+
+  h3 {
+    margin-top: 0;
+  }
+}
+
+.employee-id-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.employee-id-hint {
+  color: #999;
+  font-size: 0.75rem;
+  margin: 8px 0 0;
+}
+
+.error-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-left: 4px solid #c62828;
+  color: #c62828;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #999;
+}
+
+.hint {
+  margin-top: 16px;
+  color: #666;
+  font-size: 0.8125rem;
+  max-width: 640px;
+}
